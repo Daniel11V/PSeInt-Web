@@ -18,17 +18,32 @@ const text = `Proceso Suma Super
 
   // Todos los comentarios que quieras
 
-  Escribir "Ingrese el primer numero:"
-  Leer A
+  Escribir "Suma de Números -----------------------------"
+  Escribir "Ingrese números para sumar (0 para terminar):";
 
-  Escribir "Ingrese el segundo numero:"
-  Leer B
+  nuevoSumando <= 1;
+  total <= 0;
 
-  // Asignacion (<-)
 
-  C <- A + B
+  Mientras nuevoSumando > 0 hacer
 
-  Escribir "El resultado es: ", C
+    Leer nuevoSumando;
+
+    Si nuevoSumando > 0 Entonces
+
+      Si total != 0 Entonces
+        Escribir "+" sin salto;
+      FinSi
+
+      Escribir nuevoSumando sin salto;
+      total <= total + nuevoSumando;
+
+    FinSi
+
+  FinMientras
+
+
+  Escribir "=", total;
 
 FinProceso`
 
@@ -37,92 +52,34 @@ resizeTextarea(textareas[0])
 
 
 
+// CLEAR BUTTON
 document.getElementById("clear").addEventListener("click", () => {
     textareas[0].innerHTML = "";
 });
 
 
 // GET RESULT
-const initialData2 = {
-  name: "",
-  var: {},
-  result: []
-}
-
-const initialData = {
-  proceso: {
-    name: '',
-    var: {},
-    code: []
-  }
-}
-
-let data = JSON.parse(JSON.stringify(initialData));
-
-document.getElementById("start-result").addEventListener("click", () => {
-    data = JSON.parse(JSON.stringify(initialData));
+document.getElementById("start-result").addEventListener("click", async () => {
 
     const code = document.getElementById("code-editor");
 
-    const arrayCode = code.value.split("\n").map(line => line.split(" ").filter(word => word !== "")).filter(line => line.length);
+    const comp = new Compiler();
+    const data = await comp.start(code.value);
 
-    const isExistingVar = (v, vs) => Object.keys(vs.var).includes(v)
-  
-    for (line of arrayCode) {
-      const firstWordM = line.shift();
-      const firstWord = firstWordM.toLowerCase();
-      if (firstWord === "//") {continue;}
-      if (firstWord === "proceso") {compProceso(line); continue;}
-      if (firstWord === "escribir") {compEscribir(line); continue;}
-      if (firstWord === "leer") {compLeer(line); continue;}
-      if (firstWord === "definir") {compDefinir(line); continue;}
-      if (firstWord === "finproceso") {break;}
-      compSetvar(firstWordM, line);
-      continue;
-    }
-
-    console.log(data);
-    console.log(data.proceso.code);
-
-    async function runCode() {
-        const result = document.getElementById("result");
-        const storage = getParent();
-        result.innerHTML = "";
-        for (action of storage.code) {
-          console.log("storage", action)
-            switch (action[0]) {
-                case "escribir":
-                    for (let text of action[1]) {
-                        if (isExistingVar(text, storage)) {
-                            result.textContent += storage.var[text] + " ";
-                        } else {
-                            result.textContent += text + " ";
-                        }
-                    }
-                    result.textContent += "\n";
-                    await resizeTextarea(result)
-                    break;
-                case "leer":
-                    const value = await prompt(action[1]);
-                    storage.var[action[1]] = value;
-                    break;
-                case "setvar":
-                    const varToSet = action[1];
-                    const operation = action[2].split(" ");
-                    for (let i = 0; i < operation.length; i++) {
-                        if (isExistingVar(operation[i], storage)) {
-                            operation[i] = storage.var[operation[i]];
-                        }
-                    }
-                    storage.var[varToSet] = "" + eval(operation.join(" "));
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        console.log(storage);
-    }
-  
-    runCode();
+    const exec = new Executer();
+    exec.start(data);
 });
+
+
+// GET DIAGRAM
+document.getElementById("start-diagram").addEventListener("click", () => {
+
+    const code = document.getElementById("code-editor");
+
+    const comp = new Compiler();
+    const data = comp.start(code.value);
+
+    // const diag = new Diagramer();
+    // diag.start(data);
+});
+
